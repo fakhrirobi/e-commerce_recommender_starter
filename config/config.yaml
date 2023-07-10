@@ -1,0 +1,25 @@
+#dataset configuration 
+dataset_path : https://raw.githubusercontent.com/fakhrirobi/e-commerce_recommender_starter/master/dataset/Amazone_Magazine_Review.csv
+user_column : reviewerID
+item_column : itemID
+interaction_column : rating
+minimum_interaction : 3
+#output path 
+training_pct : 0.6 #from all dataset
+val_pct : 0.5 # from test set 
+
+
+train_utility_matrix_path : dataset/processed/train_utility_matrix.pkl
+val_utility_matrix_path : dataset/processed/val_utility_matrix.pkl
+test_utility_matrix_path : dataset/processed/test_utility_matrix.pkl
+
+#seed for reproducibility 
+seed : 43
+
+
+#mapper path 
+reviewer_id_to_ordered_id_path : dataset/mapper/reviewer_id_to_ordered_id.pkl
+ordered_id_to_reviewer_id_path : dataset/mapper/ordered_id_to_reviewer_id.pkl
+item_id_to_ordered_id_path : dataset/mapper/item_id_to_ordered_id_path.pkl
+ordered_id_to_item_id_path : dataset/mapper/ordered_id_to_item_id.pkl
+
