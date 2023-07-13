@@ -3,8 +3,8 @@ dataset_path : https://raw.githubusercontent.com/fakhrirobi/e-commerce_recommend
 user_column : reviewerID
 item_column : itemID
 interaction_column : rating
-minimum_interaction : 3
 
+minimum_interaction : 3
 
 #output path 
 training_pct : 0.6 #from all dataset 
@@ -15,8 +15,8 @@ val_pct : 0.5 # from test set
 train_utility_matrix_path : dataset/processed/train_utility_matrix.pkl
 test_utility_matrix_path : dataset/processed/test_utility_matrix.pkl
 full_utility_matrix_path : dataset/processed/full_utility_matrix.pkl
-
-best_model_path : model/
+utility_data_path : dataset/processed/utility_data.csv
+best_model_path : model/best_model_svd.pkl
 #seed for reproducibility 
 seed : 43
 

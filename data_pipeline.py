@@ -1,18 +1,11 @@
+
 import pandas as pd #data processing
-import numpy as np 
 import joblib #
-import copy 
 
 
-
-from utils import load_config
+from src.utils import load_config
 from surprise import Dataset, Reader 
 
-
-# 1.Loading Data 
-# 2. Filter Interaksi 
-# 3. Mapping 
-# 4. Data Splitting 
 
 
 
@@ -53,9 +46,8 @@ def remove_min_interaction(rating_data,number_of_interaction,threshold=3) :
     rating_data = rating_data.copy()
     filter_minimum_interaction = number_of_interaction['avg_interaction']<threshold
     under_threshold_reviewerID = number_of_interaction.loc[filter_minimum_interaction,'reviewerID'].tolist()
-    
     rating_adjusted = rating_data.loc[
-        ~ rating['reviewerID'].isin(under_threshold_reviewerID) ]
+        ~rating['reviewerID'].isin(under_threshold_reviewerID) ]
 
     return rating_adjusted
     
@@ -69,10 +61,9 @@ def remove_min_interaction(rating_data,number_of_interaction,threshold=3) :
 def map_to_ordered_id(rating,config) : 
     rating = rating.copy()
     #map user id --> ordered id 
-    reviewer_id_to_ordered_id = {}  # key : value, userid : orderedid
+    reviewer_id_to_ordered_id = {}
     ordered_id_to_reviewer_id = {}
     for idx,reviewer_id in enumerate(rating['reviewerID'].unique()) : 
-        
         reviewer_id_to_ordered_id[reviewer_id] = idx+1
         ordered_id_to_reviewer_id[idx+1] = reviewer_id
 
@@ -85,8 +76,6 @@ def map_to_ordered_id(rating,config) :
     for idx,item_id in enumerate(rating['itemID'].unique()) : 
         item_id_to_ordered_id[item_id] = idx+1
         ordered_id_to_item_id[idx+1] = item_id
-    
-    
     
     rating.reviewerID = rating.reviewerID.map(reviewer_id_to_ordered_id)
     rating.itemID = rating.itemID.map(item_id_to_ordered_id)
@@ -133,7 +122,7 @@ def train_test_split(utility_data, test_size, random_state):
     full_data = copy.deepcopy(utility_data)
 
     # Generate random seed 
-    np.random.seed(random_state) 
+    np.random.seed(random_state)
 
     # Shuffle the raw_ratings for reproducibility
     raw_ratings = full_data.raw_ratings
@@ -143,7 +132,6 @@ def train_test_split(utility_data, test_size, random_state):
     threshold = int((1-test_size) * len(raw_ratings))
     
     # Split the data
-    
     train_raw_ratings = raw_ratings[:threshold]
     test_raw_ratings = raw_ratings[threshold:]
 
@@ -165,31 +153,24 @@ def train_test_split(utility_data, test_size, random_state):
 
 
 if __name__ == "__main__" : 
-
+    
     CONFIG_DATA = load_config()
     
-    print('Checkpoint CONFIG DATA loaded')
     rating = load_data(path=CONFIG_DATA['dataset_path'])
-    print('Data Loaded')
     
     number_of_interaction = (rating.groupby('reviewerID',as_index=False)
                             .agg(avg_interaction=pd.NamedAgg('itemID','count'))
                             )
-
+    
     rating_data_filtered = remove_min_interaction(
                                                 rating_data=rating,
                                                 number_of_interaction=number_of_interaction,
                                                 threshold=3)
-    print('Rating data shape before  filtering',rating.shape)
-    print('Rating data shape after  filtering',rating_data_filtered.shape)
     
-    # print('Jumlah Unique Value reviewerID',rating_data_filtered['reviewerID'].nunique())
-    # print('reviewerID',rating_data_filtered['reviewerID'].min())
+    rating_data_filtered = map_to_ordered_id(rating=rating_data_filtered)
+    
     utility_data = map_to_ordered_id(rating=rating_data_filtered,config=CONFIG_DATA)
-    # mapper_order_id_reviewer_id = joblib.load(CONFIG_DATA['ordered_id_to_reviewer_id_path'])
     
-    # utility_data['reviewerID'] = utility_data['reviewerID'].map(mapper_order_id_reviewer_id)
-
     reader = Reader(rating_scale=(1,5))
     
     utility_matrix = Dataset.load_from_df(
@@ -197,11 +178,11 @@ if __name__ == "__main__" :
                     reader = reader
                 )
 
-    full_data, train_data, test_data = train_test_split(utility_matrix,
+    full_data, train_data, test_data = train_test_split(utility_data,
                                                     test_size = 0.2,
                                                     random_state = CONFIG_DATA['seed'])
     
-    utility_data.to_csv(CONFIG_DATA['utility_data_path'],index=False)
+    
     joblib.dump(full_data,CONFIG_DATA['full_utility_matrix_path'])
     joblib.dump(train_data,CONFIG_DATA['train_utility_matrix_path'])
     joblib.dump(test_data,CONFIG_DATA['test_utility_matrix_path'])

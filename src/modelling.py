@@ -1,4 +1,4 @@
-from surprise import AlgoBase, KNNBasic, SVD
+from surprise import AlgoBase, KNNBasic, SVD,SVDpp
 from surprise.model_selection import cross_validate
 from surprise import accuracy
 from utils import load_config
@@ -23,19 +23,19 @@ class MeanPrediction(AlgoBase):
 def load_model_candidate() : 
     #instanciate model 
     model_baseline = MeanPrediction()
-    model_baseline
+    
 
 
     # Create Neighbor-based model -- K-Nearest Neighbor
     model_knn = KNNBasic(random_state=42)
-    model_knn
+    
 
 
 
 
     # Create matrix factorization model -- SVD-like
     model_svd = SVD(n_factors=100, random_state=42)
-    
+    # model_svdpp = SVDpp(n_factors=100, random_state=42)
     model_candidate = {'baseline':model_baseline,
                        'knn' : model_knn, 
                        'svd':model_svd}
@@ -56,6 +56,7 @@ def train_model(config) :
     model_candidate = load_model_candidate()
     
     model_score = {}
+    
     for model_name in model_candidate.keys() :
         model = model_candidate[model_name]
         
@@ -63,15 +64,18 @@ def train_model(config) :
                             data = full_data,
                             cv = 5,
                             measures = ['rmse'])
+        
         mean_rmse = cv_model['test_rmse'].mean()
         model_score[model_name] = mean_rmse 
     
+    
     #find best model 
-    best_score = 0 
+    best_score = 9999 
     best_model = ''
     for model,score in model_score.items() : 
         print(f'Model : {model}, CV RMSE Score : {score}')
-        if score > best_score : 
+        if score < best_score : 
+            best_score = score 
             best_model=model 
         else : 
             continue
@@ -90,6 +94,7 @@ def train_model(config) :
     #save model as pickle object 
     folder = config['best_model_path']
     filename = f'{folder}best_model_{best_model}.pkl'
+    
     
     joblib.dump(model_best,filename=filename)
     print('Model Saved')
